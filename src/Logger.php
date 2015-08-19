@@ -184,9 +184,10 @@ class Logger extends AbstractLogger
 	{
 		if ($this->fileHandle) {
 			if ($this->options['logSingleJSONBlob']) {
+				$last_comma_position = strrpos(file_get_contents($this->logFilePath), ',');
 				$stat = fstat($this->fileHandle);
-				ftruncate($this->fileHandle, $stat['size'] - 1);
-				$this->write(']');
+				ftruncate($this->fileHandle, $stat['size'] - ($stat['size'] - $last_comma_position));
+				$this->write(PHP_EOL.']');
 			}
 			fclose($this->fileHandle);
 		}
