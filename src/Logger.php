@@ -44,6 +44,7 @@ class Logger extends AbstractLogger
 		'flushFrequency' => false,
 		'prefix'         => 'log_',
 		'logFormat'      => false,
+		'logSingleJSONBlob' => false,
 		'appendContext'  => true,
 	);
 
@@ -133,6 +134,9 @@ class Logger extends AbstractLogger
 				throw new RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
 			}
 			$this->setFileHandle('a');
+			if($this->options['logSingleJSONBlob']) {
+				$this->write('['.PHP_EOL);
+			}
 		}
 
 		if ( ! $this->fileHandle) {
@@ -179,6 +183,11 @@ class Logger extends AbstractLogger
 	public function __destruct()
 	{
 		if ($this->fileHandle) {
+			if ($this->options['logSingleJSONBlob']) {
+				$stat = fstat($this->fileHandle);
+				ftruncate($this->fileHandle, $stat['size'] - 1);
+				$this->write(']');
+			}
 			fclose($this->fileHandle);
 		}
 	}
@@ -295,6 +304,9 @@ class Logger extends AbstractLogger
 			$message = $this->options['logFormat'];
 			foreach ($parts as $part => $value) {
 				$message = str_replace('{'.$part.'}', $value, $message);
+			}
+			if($this->options['logSingleJSONBlob']) {
+				$message .= ',';
 			}
 
 		} else {
